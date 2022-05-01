@@ -230,7 +230,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
 
         // Use postgres error codes to modify reply
         if (err.code === '23505') {
-          errorMessage = 'Tier list with the name "${tiername}" already exists';
+          errorMessage = `Tier list with the name "${tiername}" already exists`;
         } else {
           errorMessage = err.message;
         }
@@ -295,6 +295,70 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
       });
     } catch (err) {
       throw (err);
+    }
+  })
+
+  interface ITierlistSearchParams {
+    tierlistName: string;
+  }
+
+  const tierlistSearchOptions: RouteShorthandOptions = {
+    schema: {
+      params: {
+        type: 'object',
+        properties: {
+          tiername: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            code: { type: 'number' },
+            data: { $ref: 'tierlist#'},
+            errorMessage: { type: 'string' }
+          }
+        },
+        404: {
+          type: 'object',
+          properties: {
+            code: { type: 'number' },
+            data: { type: 'null' },
+            errorMessage: { type: 'string' }
+          }
+        },
+        400: {
+          type: 'object',
+          properties: {
+            code: { type: 'number' },
+            data: { type: 'null' },
+            errorMessage: { type: 'string' }
+          }
+        }
+      }
+    }
+  }
+
+  fastifyInstace.get<{Params: ITierlistSearchParams, Reply: IRouteResponse<ITierlistNoItems[]>}>('/search/:tierlistName', async(request, reply) => {
+    const tierlistName = request.params.tierlistName;
+
+    // Only do search if search query contains more that 3 letters
+    if (tierlistName.length < 3) {
+      reply.status(400);
+      reply.send({code: reply.statusCode, data: null, errorMessage: 'Search query must contain 3 or more characters'});
+    };
+
+    try {
+      const getSearchResult = await fastifyInstace.pg.query('SELECT * FROM tierlists WHERE position($1 IN name) > 0 LIMIT 10', [tierlistName]);
+      if (getSearchResult.rowCount > 0) {
+        reply.status(200);
+        reply.send({code: reply.statusCode, data: getSearchResult.rows, errorMessage: null});
+      } else {
+        reply.status(404);
+        reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not find requested tier lists'});
+      }
+    } catch(err) {
+      throw(err);
     }
   })
 };
