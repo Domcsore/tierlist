@@ -1,11 +1,13 @@
 import React, { FunctionComponent } from 'react';
 
-import Header from '../components/header';
+import PageWrapper from '../components/PageWrapper';
 
 const Home: FunctionComponent = () => {
   return (
     <React.Fragment>
-      <Header />
+      <PageWrapper>
+        
+      </PageWrapper>
     </React.Fragment>
   )
 }
