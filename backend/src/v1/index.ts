@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
+import fastifyCors from "@fastify/cors";
 import postgresConnector from "./plugins/postgresConnector";
 
 import {
@@ -11,6 +12,8 @@ import {
 } from './routes/tierlistItem';
 
 const build: FastifyPluginAsync = async (fastify, options) => {
+  fastify.register(fastifyCors, {})
+
   fastify.register(postgresConnector);
 
   fastify.addSchema(tierlistItemSchema);

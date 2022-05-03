@@ -1,8 +1,8 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, PropsWithChildren } from 'react';
 
 import Header from './Header';
 
-const PageWrapper: FunctionComponent<{children: any}> = ({children}) => {
+const PageWrapper: FunctionComponent<PropsWithChildren<{}>> = ({children}) => {
   return (
     <React.Fragment>
       <Header />

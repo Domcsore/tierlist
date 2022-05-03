@@ -5,6 +5,7 @@
   "author": "Dominic Sore <domcsore@googlemail.com>",
   "license": "MIT",
   "dependencies": {
+    "@fastify/cors": "^7.0.0",
     "@types/pg": "^8.6.5",
     "fastify": "^3.28.0",
     "fastify-plugin": "^3.0.1",
