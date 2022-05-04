@@ -3,7 +3,7 @@ import { FastifyPluginAsync } from "fastify";
 export interface ICategoryItem {
   id: string;
   name: string;
-  tierlistId: string;
+  categoryId: string;
 }
 
 export const schema = {
@@ -12,7 +12,7 @@ export const schema = {
   properties: {
     id: {type: 'string'},
     name: {type: 'string'},
-    tierlistId: {type: 'string'}
+    categoryId: {type: 'string'}
   }
 }
 

@@ -2,7 +2,7 @@ import fastify, { FastifyPluginAsync, RouteShorthandOptions } from "fastify";
 import { DatabaseError } from "pg";
 import { v4 as uuid} from 'uuid';
 import { IRouteResponse } from "./routes";
-import { ICategoryItem } from "./tierlistItem";
+import { ICategoryItem } from "./categoryItem";
 
 export interface ICategory {
   id: string;
@@ -37,7 +37,7 @@ export const schema = {
 export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
   // GET ALL ROUTE
 
-  const tierlistGetAllOptions: RouteShorthandOptions = {
+  const categoryGetAllOptions: RouteShorthandOptions = {
     schema: {
       response: {
         200: {
@@ -113,16 +113,16 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
   fastifyInstace.get<{Params: ICategoryGetParams, Reply: IRouteResponse<ICategory>}>('/category/:categoryName', categoryGetOptions, async (request, reply) => {
     try {
       await fastifyInstace.pg.transact(async (client) => {
-        const getTierlistResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE name = $1', [request.params.categoryName]);
+        const getCategoryResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE name = $1', [request.params.categoryName]);
 
-      if (getTierlistResult.rows.length > 0) {
-        const row = getTierlistResult.rows[0];
-        const getTierlistItemsResult = await fastifyInstace.pg.query('SELECT * FROM categoryitems WHERE categoryid = $1', [row.id]);
+      if (getCategoryResult.rows.length > 0) {
+        const row = getCategoryResult.rows[0];
+        const getCategoryItemsResult = await fastifyInstace.pg.query('SELECT * FROM categoryitems WHERE categoryid = $1', [row.id]);
 
         const replyData = {
           id: row.id,
           name: row.name,
-          items: getTierlistItemsResult.rows as ICategoryItem[]
+          items: getCategoryItemsResult.rows as ICategoryItem[]
         }
 
         reply.status(200);
@@ -209,7 +209,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           const genItemId = uuid();
           const itemName = items[i];
           await client.query('INSERT INTO categoryItems VALUES($1, $2, $3)', [genItemId, itemName, genCategoryId]);
-          replyItemsData.push({id: genItemId, name: itemName, tierlistId: genCategoryId});
+          replyItemsData.push({id: genItemId, name: itemName, categoryId: genCategoryId});
         }
 
         // Handle database response
@@ -302,7 +302,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     categoryName: string;
   }
 
-  const tierlistSearchOptions: RouteShorthandOptions = {
+  const categorySearchOptions: RouteShorthandOptions = {
     schema: {
       params: {
         type: 'object',
@@ -340,16 +340,16 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
   }
 
   fastifyInstace.get<{Params: ICategorySearchParams, Reply: IRouteResponse<ICategoryNoItems[]>}>('/categories/search/:categoryName', async(request, reply) => {
-    const tierlistName = request.params.categoryName;
+    const categoryName = request.params.categoryName;
 
     // Only do search if search query contains more that 3 letters
-    if (tierlistName.length < 3) {
+    if (categoryName.length < 3) {
       reply.status(400);
       reply.send({code: reply.statusCode, data: null, errorMessage: 'Search query must contain 3 or more characters'});
     };
 
     try {
-      const getSearchResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE position($1 IN name) > 0 LIMIT 10', [tierlistName]);
+      const getSearchResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE position($1 IN name) > 0 LIMIT 10', [categoryName]);
       if (getSearchResult.rowCount > 0) {
         reply.status(200);
         reply.send({code: reply.statusCode, data: getSearchResult.rows, errorMessage: null});
