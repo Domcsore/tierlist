@@ -86,7 +86,7 @@ export const useCategorySearch = (searchTerm: string): IApiHook<any> => {
           },
         }
         setLoading(true);
-        const result = await apiRequest(`/search/${searchTerm}`, options);
+        const result = await apiRequest(`/categories/search/${searchTerm}`, options);
         setCode(result.code);
         setData(result.data);
         setError(result.errorMessage);

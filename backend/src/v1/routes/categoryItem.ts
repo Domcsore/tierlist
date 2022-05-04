@@ -1,19 +1,18 @@
 import { FastifyPluginAsync } from "fastify";
-import { IRouteResponse } from "./routes";
 
-export interface ITierlistItem {
+export interface ICategoryItem {
   id: string;
   name: string;
-  tierlistId: string;
+  categoryId: string;
 }
 
 export const schema = {
-  $id: 'tierlistItem',
+  $id: 'categoryItem',
   type: 'object',
   properties: {
     id: {type: 'string'},
     name: {type: 'string'},
-    tierlistId: {type: 'string'}
+    categoryId: {type: 'string'}
   }
 }
 

@@ -3,23 +3,23 @@ import fastifyCors from "@fastify/cors";
 import postgresConnector from "./plugins/postgresConnector";
 
 import {
-  routes as tierlistRoutes, 
-  schema as tierlistSchema
-} from "./routes/tierlist";
+  routes as categoryRoutes, 
+  schema as categorySchema
+} from "./routes/category";
 
 import {
-  schema as tierlistItemSchema
-} from './routes/tierlistItem';
+  schema as categoryItemSchema
+} from './routes/categoryItem';
 
 const build: FastifyPluginAsync = async (fastify, options) => {
   fastify.register(fastifyCors, {})
 
   fastify.register(postgresConnector);
 
-  fastify.addSchema(tierlistItemSchema);
-  fastify.addSchema(tierlistSchema);
+  fastify.addSchema(categoryItemSchema);
+  fastify.addSchema(categorySchema);
 
-  fastify.register(tierlistRoutes);
+  fastify.register(categoryRoutes);
 }
 
 export default build;
