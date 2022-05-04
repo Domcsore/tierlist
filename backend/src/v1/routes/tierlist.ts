@@ -2,21 +2,21 @@ import fastify, { FastifyPluginAsync, RouteShorthandOptions } from "fastify";
 import { DatabaseError } from "pg";
 import { v4 as uuid} from 'uuid';
 import { IRouteResponse } from "./routes";
-import { ITierlistItem } from "./tierlistItem";
+import { ICategoryItem } from "./tierlistItem";
 
-export interface ITierlist {
+export interface ICategory {
   id: string;
   name: string;
-  items: ITierlistItem[];
+  items: ICategoryItem[];
 }
 
-interface ITierlistNoItems {
+interface ICategoryNoItems {
   id: string;
   name: string;
 }
 
 export const schema = {
-  $id: 'tierlist',
+  $id: 'category',
   type: 'object',
   properties: {
     id: { type: 'string' },
@@ -44,7 +44,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           type: 'object',
           properties: {
             code: { type: 'number' },
-            data: { $ref: 'tierlist#'},
+            data: { $ref: 'category#'},
             errorMessage: { type: 'string' }
           }
         }
@@ -52,9 +52,9 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     }
   }
 
-  fastifyInstace.get<{Reply: IRouteResponse<ITierlistNoItems[]>}>('/tierlists', async (request, reply) => {
+  fastifyInstace.get<{Reply: IRouteResponse<ICategoryNoItems[]>}>('/categories', async (request, reply) => {
     try {
-      const result = await fastifyInstace.pg.query('SELECT * FROM tierlists');
+      const result = await fastifyInstace.pg.query('SELECT * FROM categories');
       if (result.rows.length > 0) {
         reply.status(200);
         reply.send({
@@ -67,7 +67,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
         reply.send({
           code: reply.statusCode,
           data: null,
-          errorMessage: 'No tier lists found'
+          errorMessage: 'No categories found'
         })
       }
     } catch (err) {
@@ -77,16 +77,16 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
 
   // GET ROUTE
 
-  interface ITierlistGetParams {
-    tiername: string;
+  interface ICategoryGetParams {
+    categoryName: string;
   }
 
-  const tierlistGetOptions: RouteShorthandOptions = {
+  const categoryGetOptions: RouteShorthandOptions = {
     schema: {
       params: {
         type: 'object',
         properties: {
-          tiername: { type: 'string' }
+          categoryName: { type: 'string' }
         }
       },
       response: {
@@ -94,7 +94,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           type: 'object',
           properties: {
             code: { type: 'number' },
-            data: { $ref: 'tierlist#'},
+            data: { $ref: 'category#'},
             errorMessage: { type: 'string' }
           }
         },
@@ -110,26 +110,26 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     }
   }
 
-  fastifyInstace.get<{Params: ITierlistGetParams, Reply: IRouteResponse<ITierlist>}>('/tierlist/:tiername', tierlistGetOptions, async (request, reply) => {
+  fastifyInstace.get<{Params: ICategoryGetParams, Reply: IRouteResponse<ICategory>}>('/category/:categoryName', categoryGetOptions, async (request, reply) => {
     try {
       await fastifyInstace.pg.transact(async (client) => {
-        const getTierlistResult = await fastifyInstace.pg.query('SELECT * FROM tierlists WHERE name = $1', [request.params.tiername]);
+        const getTierlistResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE name = $1', [request.params.categoryName]);
 
       if (getTierlistResult.rows.length > 0) {
         const row = getTierlistResult.rows[0];
-        const getTierlistItemsResult = await fastifyInstace.pg.query('SELECT * FROM tierlistItems WHERE tierlistId = $1', [row.id]);
+        const getTierlistItemsResult = await fastifyInstace.pg.query('SELECT * FROM categoryitems WHERE categoryid = $1', [row.id]);
 
         const replyData = {
           id: row.id,
           name: row.name,
-          items: getTierlistItemsResult.rows as ITierlistItem[]
+          items: getTierlistItemsResult.rows as ICategoryItem[]
         }
 
         reply.status(200);
         reply.send({code: reply.statusCode, data: replyData, errorMessage: null});
       } else {
         reply.status(404);
-        reply.send({code: reply.statusCode, data: null, errorMessage: "Could not find the requested tier list"});
+        reply.send({code: reply.statusCode, data: null, errorMessage: "Could not find the requested category"});
       }
       })
     } catch (err) {
@@ -139,26 +139,26 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
 
   // POST ROUTE
 
-  interface ITierlistPostParams {
-    tiername: string;
+  interface ICategoryPostParams {
+    categoryName: string;
   }
 
-  interface ITierlistPostBody {
+  interface ICategoryPostBody {
     items: string[];
   }
 
-  const tierlistPostOpts: RouteShorthandOptions = {
+  const categoryPostOpts: RouteShorthandOptions = {
     schema: {
       params: {
         type: 'object',
         properties: {
-          tiername: { type: 'string' }
+          categoryName: { type: 'string' }
         }
       },
       body: {
         type: 'object',
         properties: {
-          tierItems: {
+          items: {
             type: 'array',
             items: {
               type: 'string'
@@ -171,7 +171,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           type: 'object',
           properties: {
             code: { type: 'number' },
-            data: { $ref: 'tierlist#'},
+            data: { $ref: 'category#'},
             errorMessage: { type: 'string' }
           }
         },
@@ -188,38 +188,38 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
   }
 
   fastifyInstace.post<{
-    Params: ITierlistPostParams, 
-    Reply: IRouteResponse<ITierlist>, 
-    Body: ITierlistPostBody
-  }>('/tierlist/:tiername', tierlistPostOpts, async (request, reply) => {
-    const tiername = request.params.tiername;
+    Params: ICategoryPostParams, 
+    Reply: IRouteResponse<ICategory>, 
+    Body: ICategoryPostBody
+  }>('/category/:categoryName', categoryPostOpts, async (request, reply) => {
+    const categoryName = request.params.categoryName;
 
     try {
       await fastifyInstace.pg.transact(async (client) => {
         // Generate ID
-        const genTierlistId = uuid();
+        const genCategoryId = uuid();
 
         // Send database request
-        const tierlistInsertResult = await client.query('INSERT INTO tierlists VALUES($1, $2) RETURNING id', [genTierlistId, tiername]);
+        const categoryInsertResult = await client.query('INSERT INTO categories VALUES($1, $2) RETURNING id', [genCategoryId, categoryName]);
 
         // Insert items and build response array
-        let replyItemsData: ITierlistItem[] = [];
+        let replyItemsData: ICategoryItem[] = [];
         const items = request.body.items;
         for (let i = 0; i < items.length; i++) {
           const genItemId = uuid();
           const itemName = items[i];
-          await client.query('INSERT INTO tierlistItems VALUES($1, $2, $3)', [genItemId, itemName, genTierlistId]);
-          replyItemsData.push({id: genItemId, name: itemName, tierlistId: genTierlistId});
+          await client.query('INSERT INTO categoryItems VALUES($1, $2, $3)', [genItemId, itemName, genCategoryId]);
+          replyItemsData.push({id: genItemId, name: itemName, tierlistId: genCategoryId});
         }
 
         // Handle database response
-        if (tierlistInsertResult.rows.length > 0) {
-          const row = tierlistInsertResult.rows[0]
+        if (categoryInsertResult.rows.length > 0) {
+          const row = categoryInsertResult.rows[0]
           reply.status(200);
-          reply.send({code: reply.statusCode, data: {id: row.id, name: tiername, items: replyItemsData}, errorMessage: null});
+          reply.send({code: reply.statusCode, data: {id: row.id, name: categoryName, items: replyItemsData}, errorMessage: null});
         } else {
           reply.status(500);
-          reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not add tier list'});
+          reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not add category'});
         }
       });
     } catch (err) {
@@ -230,7 +230,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
 
         // Use postgres error codes to modify reply
         if (err.code === '23505') {
-          errorMessage = `Tier list with the name "${tiername}" already exists`;
+          errorMessage = `Category with the name "${categoryName}" already exists`;
         } else {
           errorMessage = err.message;
         }
@@ -244,16 +244,16 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
 
   // DELETE ROUTE
 
-  interface ITierlistDeleteParams {
-    tierlistName: string;
+  interface ICategoryDeleteParams {
+    categoryName: string;
   }
 
-  const tierlistDeleteOptions: RouteShorthandOptions = {
+  const categoryDeleteOptions: RouteShorthandOptions = {
     schema: {
       params: {
         type: 'object',
         properties: {
-          tiername: { type: 'string' }
+          categoryName: { type: 'string' }
         }
       },
       response: {
@@ -261,7 +261,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           type: 'object',
           properties: {
             code: { type: 'number' },
-            data: { $ref: 'tierlist#'},
+            data: { $ref: 'category#'},
             errorMessage: { type: 'string' }
           }
         },
@@ -277,20 +277,20 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     }
   }
 
-  fastifyInstace.delete<{Params: ITierlistDeleteParams, Reply: IRouteResponse<ITierlistNoItems>}>('/tierlist/:tierlistName', tierlistDeleteOptions, async (request, reply) => {
+  fastifyInstace.delete<{Params: ICategoryDeleteParams, Reply: IRouteResponse<ICategoryNoItems>}>('/category/:categoryName', categoryDeleteOptions, async (request, reply) => {
     try {
       await fastifyInstace.pg.transact(async (client) => {
-        const tierlistName = request.params.tierlistName;
-        const tierlistGetIdResult = await fastifyInstace.pg.query('SELECT id FROM tierlists WHERE name = $1', [tierlistName]);
-        await fastifyInstace.pg.query('DELETE from tierlistItems WHERE tierlistId = $1', [tierlistGetIdResult.rows[0].id]);
-        const result = await fastifyInstace.pg.query('DELETE FROM tierlists WHERE name = $1 RETURNING id, name', [request.params.tierlistName]);
+        const categoryName = request.params.categoryName;
+        const categoryGetIdResult = await fastifyInstace.pg.query('SELECT id FROM categories WHERE name = $1', [categoryName]);
+        await fastifyInstace.pg.query('DELETE from categoryItems WHERE categoryId = $1', [categoryGetIdResult.rows[0].id]);
+        const result = await fastifyInstace.pg.query('DELETE FROM categories WHERE name = $1 RETURNING id, name', [categoryName]);
         if (result.rows.length > 0) {
           const row = result.rows[0]
           reply.status(200);
           reply.send({code: reply.statusCode, data: {id: row.id, name: row.name}, errorMessage: null});
         } else {
           reply.status(404);
-          reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not find requested tier list'});
+          reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not find requested category'});
         }
       });
     } catch (err) {
@@ -298,8 +298,8 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     }
   })
 
-  interface ITierlistSearchParams {
-    tierlistName: string;
+  interface ICategorySearchParams {
+    categoryName: string;
   }
 
   const tierlistSearchOptions: RouteShorthandOptions = {
@@ -307,7 +307,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
       params: {
         type: 'object',
         properties: {
-          tiername: { type: 'string' }
+          categoryName: { type: 'string' }
         }
       },
       response: {
@@ -315,7 +315,7 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
           type: 'object',
           properties: {
             code: { type: 'number' },
-            data: { $ref: 'tierlist#'},
+            data: { $ref: 'category#'},
             errorMessage: { type: 'string' }
           }
         },
@@ -339,8 +339,8 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     }
   }
 
-  fastifyInstace.get<{Params: ITierlistSearchParams, Reply: IRouteResponse<ITierlistNoItems[]>}>('/search/:tierlistName', async(request, reply) => {
-    const tierlistName = request.params.tierlistName;
+  fastifyInstace.get<{Params: ICategorySearchParams, Reply: IRouteResponse<ICategoryNoItems[]>}>('/categories/search/:categoryName', async(request, reply) => {
+    const tierlistName = request.params.categoryName;
 
     // Only do search if search query contains more that 3 letters
     if (tierlistName.length < 3) {
@@ -349,13 +349,13 @@ export const routes: FastifyPluginAsync = async (fastifyInstace, options) => {
     };
 
     try {
-      const getSearchResult = await fastifyInstace.pg.query('SELECT * FROM tierlists WHERE position($1 IN name) > 0 LIMIT 10', [tierlistName]);
+      const getSearchResult = await fastifyInstace.pg.query('SELECT * FROM categories WHERE position($1 IN name) > 0 LIMIT 10', [tierlistName]);
       if (getSearchResult.rowCount > 0) {
         reply.status(200);
         reply.send({code: reply.statusCode, data: getSearchResult.rows, errorMessage: null});
       } else {
         reply.status(404);
-        reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not find requested tier lists'});
+        reply.send({code: reply.statusCode, data: null, errorMessage: 'Could not find requested category'});
       }
     } catch(err) {
       throw(err);
