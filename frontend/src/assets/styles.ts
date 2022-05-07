@@ -13,6 +13,8 @@ export const fontSizes = {
   sm: '0.8rem',
   md: '1rem',
   lg: '1.8rem',
+  xl: '2rem',
+  xxl: '2.8rem',
 }
 
 export const radius = {

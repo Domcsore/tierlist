@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import { spacing } from '../assets/styles';
+import { fontSizes, spacing } from '../assets/styles';
 
 import logoSvg from '../assets/logo.svg';
 
@@ -9,16 +9,17 @@ const SHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: ${spacing.sm};
+  padding: ${spacing.md};
 `;
 
 const LogoText = styled.h1`
   font-family: 'Vampiro One', cursive;
   margin-left: ${spacing.sm};
+  font-size: ${fontSizes.xl};
 `;
 
 const Logo = styled.img`
-  height: 2rem;
+  height: ${fontSizes.xl};
 `;
 
 const Header: FunctionComponent = () => {
